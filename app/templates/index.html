@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="description" content="Daily Brain Dump — Evening check-out and morning check-in routine." />
+  <title>Brain Dump</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <!-- ======================================================
+       HEADER
+       ====================================================== -->
+  <header>
+    <div class="header-brand">
+      <span class="brand-dot" aria-hidden="true"></span>
+      <span id="header-title" class="brand-name">Brain Dump</span>
+    </div>
+    <div class="header-controls">
+      <button id="lang-btn"   class="ctrl-btn" aria-label="Toggle language">EN</button>
+      <button id="theme-btn"  class="ctrl-btn" aria-label="Toggle dark mode">☀️</button>
+    </div>
+  </header>
+
+  <!-- ======================================================
+       MAIN — rendered by app.js
+       ====================================================== -->
+  <main id="app" role="main"></main>
+
+  <!-- ======================================================
+       MARKDOWN MODAL
+       ====================================================== -->
+  <div id="md-modal" class="modal-overlay hidden"
+       role="dialog" aria-modal="true" aria-labelledby="md-modal-title">
+    <div class="modal-box">
+      <h3 id="md-modal-title" class="modal-title">Markdown</h3>
+      <pre id="md-content"   class="md-preview"></pre>
+      <div class="modal-actions">
+        <button id="btn-copy-md"  class="btn-primary">Copy</button>
+        <button id="btn-close-md" class="btn-secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

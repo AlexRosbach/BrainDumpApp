@@ -1,0 +1,38 @@
+name: Question or Support
+description: Use this for setup questions, expected behavior, or general support
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for your interest in BrainDumpApp! Please provide as much detail as possible.
+  - type: textarea
+    id: question
+    attributes:
+      label: What do you need help with?
+      description: Please describe your question or support need in detail.
+      placeholder: |
+        Example: The Morning Check-in does not load yesterday's session even though I completed the Evening Check-out...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Details
+      description: Please provide relevant information about your setup.
+      value: |
+        - **BrainDumpApp Version**:
+        - **Method of deployment**:
+        - **Host OS/Architecture**:
+        - **Browser/Client**:
+        - **Timezone (TZ env var)**:
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Logs, screenshots, or any other relevant information.
+      placeholder: |
+        ```
+        Paste logs or error messages here
+        ```

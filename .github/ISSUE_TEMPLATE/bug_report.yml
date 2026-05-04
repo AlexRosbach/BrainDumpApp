@@ -1,0 +1,72 @@
+name: Bug Report
+description: File a bug report
+title: "[Bug]: "
+labels: ["bug"]
+assignees:
+  - AlexRosbach
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected to happen instead.
+      placeholder: Tell us what you saw!
+      value: "A bug happened!"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Open the app at ...
+        2. Select mode ...
+        3. Complete step ...
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        examples:
+          - **BrainDumpApp Version**: 1.0.0
+          - **Method of deployment**: Docker / docker-compose
+          - **Host OS/Architecture**: Ubuntu 24.04 / x86_64
+          - **Browser/Client**: Safari on iPad / Chrome 124
+          - **Mode affected**: Evening Check-out / Morning Check-in / Both
+      value: |
+        - **BrainDumpApp Version**:
+        - **Method of deployment**:
+        - **Host OS/Architecture**:
+        - **Browser/Client**:
+        - **Mode affected**:
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else?
+      description: Logs, screenshots, or any other context. Container logs can be retrieved with `docker-compose logs braindump`.
+      render: shell
+  - type: checkboxes
+    id: duplicate
+    attributes:
+      label: Is there an existing issue for this?
+      description: Please search to see if an issue already exists for the bug you encountered.
+      options:
+        - label: I have searched the existing issues
+          required: true
+  - type: checkboxes
+    id: version
+    attributes:
+      label: Are you on the latest version?
+      options:
+        - label: I am on the latest version
+          required: true
