@@ -90,7 +90,7 @@ const TRANS = {
     landingEveningDesc: '5 Schritte durch den Tagesabschluss: Stimmung, Gedanken, Erfolge, Aufgaben und eine Intention für morgen.',
     landingMorningTitle: 'Morgen-Checkin',
     landingMorningDesc: 'Gestrige Intention prüfen, Aufgaben abhaken und mit einem klaren Fokus in den Tag starten.',
-    landingDataNote: 'Im Docker-Image werden keine Sessions gespeichert. Daten liegen nur im Docker-Volume; falls kein gestriger Eintrag vorhanden ist, kannst du ihn per Excel-Upload importieren.',
+    landingDataNote: 'Es wird nichts dauerhaft gespeichert. Daten liegen nur fluechtig im laufenden Container und starten nach jedem Neustart leer.',
     landingGithub: 'GitHub ↗',
     landingCta: 'App öffnen →',
 
@@ -187,7 +187,7 @@ const TRANS = {
     landingEveningDesc: '5 guided steps to close out the day: mood, thoughts, wins, tasks, and an intention for tomorrow.',
     landingMorningTitle: 'Morning Check-in',
     landingMorningDesc: 'Review yesterday\'s intention, check off tasks, and start the day with a clear focus.',
-    landingDataNote: 'No sessions are stored in the Docker image. Data lives only in the Docker volume; if yesterday\'s entry is missing, import it via Excel upload.',
+    landingDataNote: 'Nothing is stored permanently. Data exists only in volatile runtime storage and starts empty after each restart.',
     landingGithub: 'GitHub ↗',
     landingCta: 'Open App →',
 
@@ -508,7 +508,6 @@ function renderLandingPage() {
 }
 
 async function enterApp() {
-  localStorage.setItem('bd_visited', '1');
   state.mode = null;
   document.body.classList.remove('morning', 'evening');
 
@@ -1031,20 +1030,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.target === e.currentTarget) closeMarkdownModal();
   });
 
-  // First-time visitors see the landing page; returning visitors go straight to the app
-  if (!localStorage.getItem('bd_visited')) {
-    state.mode = 'landing';
-    renderLandingPage();
-    return;
-  }
-
-  // Auto-detect time for direct navigation
-  const h = getCurrentHour();
-  if (h < 11) {
-    await handleStartMorning();
-  } else if (h >= 16) {
-    startEvening();
-  } else {
-    renderModeSelector();
-  }
+  // Always start on the landing page when the browser loads.
+  state.mode = 'landing';
+  renderLandingPage();
 });

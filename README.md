@@ -10,17 +10,17 @@ The application provides two complementary routines that together form a complet
 
 On first visit, users land on a short introduction page that explains the app's purpose and links directly to the GitHub repository: https://github.com/AlexRosbach/BrainDumpApp
 
-All session data is stored as JSON files on a mounted Docker volume, making it portable and backup-friendly without requiring a database server. Each day's data lives in a single file (`YYYY-MM-DD.json`), and morning check-in data is merged back into the previous day's file to keep records self-contained.
+All session data is stored as JSON files inside the running container (`/data`) without persistent volumes. Each day's data lives in a single file (`YYYY-MM-DD.json`), and morning check-in data is merged back into the previous day's file to keep records self-contained during runtime.
 
 If no session data is available for yesterday (for example after redeploying with a fresh image), the morning flow offers an **Excel upload button** to import the latest exported data and prefill the check-in.
 
 ## Technical Foundation
 
-The deployment combines Flask as the backend, plain HTML/CSS/JavaScript for the single-page frontend, and openpyxl for Excel export. The interface uses the Inter typeface and a design language modelled after LanLens. The entire application runs in a single Docker container based on Python 3.11-slim, served by gunicorn and designed to sit behind a reverse proxy for TLS termination. A named Docker volume persists all session data and the cumulative Excel log independently of container lifecycle.
+The deployment combines Flask as the backend, plain HTML/CSS/JavaScript for the single-page frontend, and openpyxl for Excel export. The interface uses the Inter typeface and a design language modelled after LanLens. The entire application runs in a single Docker container based on Python 3.11-slim, served by gunicorn and designed to sit behind a reverse proxy for TLS termination. Runtime data is held in `/data` on ephemeral container storage and is reset after restart.
 
 ## App Modes
 
-The interface auto-detects the appropriate mode based on local browser time:
+On each browser load, the app starts on the landing page. After clicking "App öffnen / Open App", it auto-detects the appropriate mode based on local browser time:
 
 | Time window | Behaviour |
 |---|---|
@@ -49,7 +49,7 @@ docker-compose up -d
 
 Navigate to `http://localhost:5000` in your browser or on your iPad.
 
-The `/data` volume is created automatically on first launch. No further configuration is required.
+The app uses ephemeral runtime storage at `/data`. No data is persisted across container restarts.
 
 **Local development (without Docker)**
 
@@ -119,7 +119,7 @@ The following measures are active by default:
 
 ## Data & Export
 
-Session files are written to `/data/sessions/YYYY-MM-DD.json` inside the container, persisted on the `braindump_data` named volume.
+Session files are written to `/data/sessions/YYYY-MM-DD.json` inside the running container and are not persisted after restart.
 
 ```json
 {
@@ -134,7 +134,7 @@ Session files are written to `/data/sessions/YYYY-MM-DD.json` inside the contain
 }
 ```
 
-**Excel Export** — generates or updates `brain_dump_log.xlsx` in the `/data` volume. Each row represents one day. If a row for that date already exists it is updated in place rather than duplicated.
+**Excel Export** — generates or updates `brain_dump_log.xlsx` in `/data` during runtime. Each row represents one day. If a row for that date already exists it is updated in place rather than duplicated.
 
 **Markdown Export** — generates a Joplin-compatible Markdown note combining evening and morning data into a single document, with one-click clipboard copy.
 
@@ -209,14 +209,11 @@ services:
     build: .
     ports:
       - "5000:5000"
-    volumes:
-      - braindump_data:/data
+    tmpfs:
+      - /data
     environment:
       - TZ=Europe/Berlin
     restart: unless-stopped
-
-volumes:
-  braindump_data:
 ```
 
 Change `TZ` to match your timezone if deploying outside Central Europe.
