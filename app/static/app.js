@@ -80,7 +80,26 @@ const TRANS = {
     langToggleLabel: 'EN',
     exportSuccess: '✓ Exportiert!',
     exportError: 'Fehler beim Export.',
+    saveFailed: 'Speichern fehlgeschlagen. Bitte prüfe deine Verbindung.',
     selectMoodHint: 'Bitte wähle eine Stimmung aus.',
+
+    // Landing page
+    landingTagline: 'Deine tägliche Reflexionsroutine',
+    landingDesc: 'Eine strukturierte Routine für Abend und Morgen. Gedanken ablegen, Erfolge festhalten, Prioritäten setzen und fokussiert in den neuen Tag starten.',
+    landingEveningTitle: 'Abend-Checkout',
+    landingEveningDesc: '5 Schritte durch den Tagesabschluss: Stimmung, Gedanken, Erfolge, Aufgaben und eine Intention für morgen.',
+    landingMorningTitle: 'Morgen-Checkin',
+    landingMorningDesc: 'Gestrige Intention prüfen, Aufgaben abhaken und mit einem klaren Fokus in den Tag starten.',
+    landingDataNote: 'Im Docker-Image werden keine Sessions gespeichert. Daten liegen nur im Docker-Volume; falls kein gestriger Eintrag vorhanden ist, kannst du ihn per Excel-Upload importieren.',
+    landingGithub: 'GitHub ↗',
+    landingCta: 'App öffnen →',
+
+    // Excel import
+    importHint: 'Kein gestriger Eintrag vorhanden? Lade eine Brain-Dump-Excel-Datei hoch, um den Morgen-Checkin vorzubelegen.',
+    btnImportExcel: '📥 Excel importieren',
+    importSuccess: '✓ Daten importiert!',
+    importError: 'Import fehlgeschlagen. Bitte prüfe das Dateiformat.',
+    importedFrom: 'Importiert vom',
   },
   en: {
     appTitle: 'Brain Dump',
@@ -158,7 +177,26 @@ const TRANS = {
     langToggleLabel: 'DE',
     exportSuccess: '✓ Exported!',
     exportError: 'Export failed.',
+    saveFailed: 'Saving failed. Please check your connection.',
     selectMoodHint: 'Please select a mood.',
+
+    // Landing page
+    landingTagline: 'Your daily reflection routine',
+    landingDesc: 'A structured routine for evening and morning. Clear your head, capture wins, set priorities — and start the next day with focus.',
+    landingEveningTitle: 'Evening Check-out',
+    landingEveningDesc: '5 guided steps to close out the day: mood, thoughts, wins, tasks, and an intention for tomorrow.',
+    landingMorningTitle: 'Morning Check-in',
+    landingMorningDesc: 'Review yesterday\'s intention, check off tasks, and start the day with a clear focus.',
+    landingDataNote: 'No sessions are stored in the Docker image. Data lives only in the Docker volume; if yesterday\'s entry is missing, import it via Excel upload.',
+    landingGithub: 'GitHub ↗',
+    landingCta: 'Open App →',
+
+    // Excel import
+    importHint: 'No entry from yesterday? Upload a Brain Dump Excel file to prefill the morning check-in.',
+    btnImportExcel: '📥 Import Excel',
+    importSuccess: '✓ Data imported!',
+    importError: 'Import failed. Please check the file format.',
+    importedFrom: 'Imported from',
   },
 };
 
@@ -173,7 +211,7 @@ const MOOD_EMOJIS = ['😞', '😕', '😐', '🙂', '😄'];
 const state = {
   lang: localStorage.getItem('bd_lang') || 'de',
   theme: localStorage.getItem('bd_theme') || 'dark',
-  mode: null,   // 'evening' | 'evening-complete' | 'morning' | 'morning-no-session' | 'morning-complete'
+  mode: null,   // 'landing' | 'evening' | 'evening-complete' | 'morning' | 'morning-no-session' | 'morning-complete'
   step: 1,
 
   eveningData: {
@@ -191,6 +229,7 @@ const state = {
   yesterdaySession: null,
   todayStr: '',
   yesterdayStr: '',
+  appVersion: '0.0.0',
 };
 
 /* ============================================================
@@ -236,6 +275,11 @@ function getYesterdayStr() {
 
 function getCurrentHour() {
   return new Date().getHours();
+}
+
+function getAppVersion() {
+  const meta = document.querySelector('meta[name="app-version"]');
+  return (meta && meta.content ? meta.content.trim() : '') || '0.0.0';
 }
 
 function showToast(msg, type = 'success') {
@@ -299,6 +343,7 @@ async function apiSaveSession(dateStr, data) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
+    if (!res.ok) return null;
     return await res.json();
   } catch (e) {
     console.error('Save session failed', e);
@@ -382,6 +427,7 @@ function renderExportButtons(isMorning) {
    ============================================================ */
 function renderCurrentScreen() {
   switch (state.mode) {
+    case 'landing':             renderLandingPage();        break;
     case null:                  renderModeSelector();       break;
     case 'evening':             renderEveningStep();        break;
     case 'evening-complete':    renderEveningComplete();    break;
@@ -419,6 +465,61 @@ function renderModeSelector() {
       </button>
     </div>
   </div>`);
+}
+
+/* ============================================================
+   LANDING PAGE
+   ============================================================ */
+function renderLandingPage() {
+  setApp(`<div class="screen landing-screen">
+    <div class="landing-hero">
+      <p class="landing-tagline">${escHtml(t('landingTagline'))}</p>
+      <p class="landing-desc">${escHtml(t('landingDesc'))}</p>
+    </div>
+
+    <div class="landing-features">
+      <div class="landing-feature">
+        <span class="landing-feature-icon">🌙</span>
+        <div>
+          <div class="landing-feature-title">${escHtml(t('landingEveningTitle'))}</div>
+          <div class="landing-feature-desc">${escHtml(t('landingEveningDesc'))}</div>
+        </div>
+      </div>
+      <div class="landing-feature">
+        <span class="landing-feature-icon">☀️</span>
+        <div>
+          <div class="landing-feature-title">${escHtml(t('landingMorningTitle'))}</div>
+          <div class="landing-feature-desc">${escHtml(t('landingMorningDesc'))}</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="landing-data-note">${escHtml(t('landingDataNote'))}</p>
+    <p class="landing-version">v${escHtml(state.appVersion)}</p>
+
+    <div class="landing-actions">
+      <button class="btn-primary landing-cta" onclick="enterApp()">${escHtml(t('landingCta'))}</button>
+      <a class="landing-github"
+         href="https://github.com/AlexRosbach/BrainDumpApp"
+         target="_blank"
+         rel="noopener noreferrer">${escHtml(t('landingGithub'))}</a>
+    </div>
+  </div>`);
+}
+
+async function enterApp() {
+  localStorage.setItem('bd_visited', '1');
+  state.mode = null;
+  document.body.classList.remove('morning', 'evening');
+
+  const h = getCurrentHour();
+  if (h < 11) {
+    await handleStartMorning();
+  } else if (h >= 16) {
+    startEvening();
+  } else {
+    renderModeSelector();
+  }
 }
 
 /* ============================================================
@@ -624,7 +725,11 @@ async function finishEvening() {
     intention: state.eveningData.intention,
     evening_saved_at: new Date().toISOString(),
   };
-  await apiSaveSession(state.todayStr, payload);
+  const result = await apiSaveSession(state.todayStr, payload);
+  if (!result) {
+    showToast(t('saveFailed'), 'error');
+    return;
+  }
   state.mode = 'evening-complete';
   renderEveningComplete();
 }
@@ -667,11 +772,56 @@ function renderNoYesterdaySession() {
     <div class="empty-icon">📭</div>
     <h2 class="step-title">${escHtml(t('noYesterdayTitle'))}</h2>
     <p class="step-desc" style="text-align:center">${escHtml(t('noYesterdayText'))}</p>
+
+    <div class="import-box">
+      <p class="import-hint">${escHtml(t('importHint'))}</p>
+      <label class="btn-upload">
+        ${escHtml(t('btnImportExcel'))}
+        <input id="excel-file-input" type="file" accept=".xlsx"
+               onchange="handleExcelImport(event)" hidden />
+      </label>
+      <div id="import-error" class="field-error hidden"></div>
+    </div>
+
     <div class="btn-group">
       <button class="btn-secondary" onclick="proceedMorningEmpty()">${escHtml(t('btnContinueAnyway'))}</button>
-      <button class="btn-primary" onclick="startEvening()">${escHtml(t('btnGoToEvening'))}</button>
+      <button class="btn-primary"   onclick="startEvening()">${escHtml(t('btnGoToEvening'))}</button>
     </div>
   </div>`);
+}
+
+async function handleExcelImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch('/api/import/excel', { method: 'POST', body: formData });
+
+    if (!res.ok) {
+      showFieldError('import-error', t('importError'));
+      // reset so the user can try again
+      document.getElementById('excel-file-input').value = '';
+      return;
+    }
+
+    const session = await res.json();
+    state.yesterdaySession = session;
+    state.morningTasks = (session.tasks || []).map(tk => ({ ...tk }));
+    state.morningMood  = null;
+    state.morningNote  = '';
+    state.mode = 'morning';
+    renderMorningFlow();
+
+    const fromDate = session.source_date ? ` (${t('importedFrom')} ${session.source_date})` : '';
+    showToast(t('importSuccess') + fromDate, 'success');
+
+  } catch (e) {
+    console.error('Excel import failed', e);
+    showFieldError('import-error', t('importError'));
+  }
 }
 
 function proceedMorningEmpty() {
@@ -762,7 +912,11 @@ async function saveMorningCheckin() {
     morning_date: state.todayStr,
     morning_saved_at: new Date().toISOString(),
   };
-  await apiSaveSession(state.yesterdayStr, payload);
+  const result = await apiSaveSession(state.yesterdayStr, payload);
+  if (!result) {
+    showToast(t('saveFailed'), 'error');
+    return;
+  }
   state.mode = 'morning-complete';
   renderMorningComplete();
 }
@@ -849,16 +1003,26 @@ function restartApp() {
 document.addEventListener('DOMContentLoaded', async () => {
   state.todayStr = getTodayStr();
   state.yesterdayStr = getYesterdayStr();
+  state.appVersion = getAppVersion();
 
   // Apply persisted preferences
   applyTheme(state.theme);
   document.getElementById('lang-btn').textContent = t('langToggleLabel');
   document.getElementById('header-title').textContent = t('appTitle');
+  document.getElementById('header-version').textContent = `v${state.appVersion}`;
   document.documentElement.lang = state.lang;
 
   // Wire up header buttons
   document.getElementById('lang-btn').addEventListener('click', toggleLang);
   document.getElementById('theme-btn').addEventListener('click', toggleTheme);
+
+  // Clicking the app title always returns to the landing page
+  document.getElementById('header-title').style.cursor = 'pointer';
+  document.getElementById('header-title').addEventListener('click', () => {
+    state.mode = 'landing';
+    document.body.classList.remove('morning', 'evening');
+    renderLandingPage();
+  });
 
   // Wire up markdown modal buttons
   document.getElementById('btn-copy-md').addEventListener('click', copyMarkdown);
@@ -866,6 +1030,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('md-modal').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeMarkdownModal();
   });
+
+  // First-time visitors see the landing page; returning visitors go straight to the app
+  if (!localStorage.getItem('bd_visited')) {
+    state.mode = 'landing';
+    renderLandingPage();
+    return;
+  }
 
   // Auto-detect time for direct navigation
   const h = getCurrentHour();

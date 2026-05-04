@@ -21,6 +21,7 @@ RUN pip install --no-cache-dir -r requirements.txt \
 # Application source
 # ---------------------------------------------------------------------------
 COPY app/ .
+COPY VERSION /app/VERSION
 
 # Pre-create /data so the named volume inherits correct ownership on first run.
 # Docker copies this directory into a new empty named volume automatically.
@@ -55,7 +56,9 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
 # ---------------------------------------------------------------------------
 # Gunicorn — production-hardened settings
 #   --workers 2          : 2 sync workers, enough for a personal/small app
-#   --timeout 30         : kill stuck workers after 30s
+#   --timeout 90         : tolerate slow proxy handshakes or large exports
+#   --graceful-timeout 30: let workers shut down gracefully during recycle
+#   --keep-alive 65      : keep upstream connections stable behind reverse proxies
 #   --max-requests 500   : recycle workers to prevent memory leaks
 #   --max-requests-jitter: stagger recycling so not all workers restart at once
 #   --forwarded-allow-ips: trust X-Forwarded-* only from localhost (NGINX)
@@ -63,7 +66,9 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
 CMD ["gunicorn", \
      "--bind",                   "0.0.0.0:5000", \
      "--workers",                "2", \
-     "--timeout",                "30", \
+     "--timeout",                "90", \
+     "--graceful-timeout",       "30", \
+     "--keep-alive",             "65", \
      "--max-requests",           "500", \
      "--max-requests-jitter",    "50", \
      "--forwarded-allow-ips",    "127.0.0.1", \
