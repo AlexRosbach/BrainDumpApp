@@ -2,6 +2,12 @@
 
 All notable changes to BrainDumpApp are documented in this file.
 
+## v1.4.1 — Deployment compatibility fix
+
+### Fixed
+- Removed `gosu` user switching from the container entrypoint so deployments with `no-new-privileges` or restrictive container security policies no longer fail with `failed switching to "braindump": operation not permitted`.
+- Kept `/data` startup preparation tolerant so mounted volumes remain writable for session saves and Excel exports.
+
 ## v1.4.0 — Export reliability and UI polish
 
 ### Fixed

@@ -3,7 +3,7 @@ version: '3.8'
 services:
   braindump:
     build: .
-    image: alexrosbach/braindumpapp:1.4.0
+    image: alexrosbach/braindumpapp:1.4.1
     ports:
       - "5000:5000"
     volumes:

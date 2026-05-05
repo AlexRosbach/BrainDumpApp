@@ -12,10 +12,7 @@ WORKDIR /app
 # Dependencies — install before copying source so Docker layer is cached
 # ---------------------------------------------------------------------------
 COPY app/requirements.txt ./
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends gosu \
-    && rm -rf /var/lib/apt/lists/* \
-    && pip install --no-cache-dir -r requirements.txt \
+RUN pip install --no-cache-dir -r requirements.txt \
     && pip cache purge \
     && find /usr -name '*.pyc' -delete \
     && find /usr -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true

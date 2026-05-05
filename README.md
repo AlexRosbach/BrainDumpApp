@@ -1,6 +1,6 @@
 # BrainDumpApp
 
-![Version](https://img.shields.io/badge/version-1.4.0-6366f1)
+![Version](https://img.shields.io/badge/version-1.4.1-6366f1)
 ![Docker](https://img.shields.io/badge/docker-alexrosbach%2Fbraindumpapp-2496ed)
 ![Docker Pulls](https://img.shields.io/docker/pulls/alexrosbach/braindumpapp)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -41,7 +41,7 @@ The UI uses a compact LanLens-inspired design system: dark default theme, light 
 Images are published on Docker Hub:
 
 ```bash
-docker pull alexrosbach/braindumpapp:1.4.0
+docker pull alexrosbach/braindumpapp:1.4.1
 # or
 docker pull alexrosbach/braindumpapp:latest
 ```
@@ -54,7 +54,7 @@ docker run -d \
   -p 5000:5000 \
   -v braindump-data:/data \
   --restart unless-stopped \
-  alexrosbach/braindumpapp:1.4.0
+  alexrosbach/braindumpapp:1.4.1
 ```
 
 Open:
@@ -68,7 +68,7 @@ http://localhost:5000
 ```yaml
 services:
   braindump:
-    image: alexrosbach/braindumpapp:1.4.0
+    image: alexrosbach/braindumpapp:1.4.1
     ports:
       - "5000:5000"
     volumes:
@@ -115,7 +115,7 @@ GET /api/health
 ```
 
 ```json
-{"status":"ok","service":"BrainDumpApp","version":"1.4.0"}
+{"status":"ok","service":"BrainDumpApp","version":"1.4.1"}
 ```
 
 ```http
@@ -123,7 +123,7 @@ GET /version
 ```
 
 ```json
-{"version":"1.4.0"}
+{"version":"1.4.1"}
 ```
 
 Main endpoints:
