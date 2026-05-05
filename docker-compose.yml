@@ -3,16 +3,20 @@ version: '3.8'
 services:
   braindump:
     build: .
+    image: alexrosbach/braindumpapp:1.4.0
     ports:
       - "5000:5000"
-    tmpfs:
-      - /data
+    volumes:
+      - braindump-data:/data
     environment:
       - TZ=Europe/Berlin
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')"]
       interval: 30s
       timeout: 10s
       start_period: 15s
       retries: 3
+
+volumes:
+  braindump-data:

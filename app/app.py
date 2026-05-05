@@ -139,27 +139,45 @@ def write_session(date_str: str, data: dict):
     return existing
 
 
+def _safe_mood(value):
+    try:
+        idx = int(value)
+    except (TypeError, ValueError):
+        return ''
+    if 1 <= idx <= len(MOOD_EMOJIS):
+        return MOOD_EMOJIS[idx - 1]
+    return ''
+
+
+def _safe_task_text(tasks, index: int) -> str:
+    if len(tasks) <= index or not isinstance(tasks[index], dict):
+        return ''
+    return str(tasks[index].get('text') or '')
+
+
+def _safe_task_done(tasks, index: int) -> str:
+    if len(tasks) <= index or not isinstance(tasks[index], dict):
+        return ''
+    return 'Yes' if tasks[index].get('done') else 'No'
+
+
 def build_excel_row(date_str: str, session: dict):
-    tasks  = session.get('tasks', [])
-    wins   = session.get('wins', [])
-    em_idx = session.get('evening_mood')
-    mm_idx = session.get('morning_mood')
-    em = MOOD_EMOJIS[int(em_idx) - 1] if em_idx else ''
-    mm = MOOD_EMOJIS[int(mm_idx) - 1] if mm_idx else ''
+    tasks = session.get('tasks', []) if isinstance(session.get('tasks', []), list) else []
+    wins = session.get('wins', []) if isinstance(session.get('wins', []), list) else []
     return [
         date_str,
-        em,
+        _safe_mood(session.get('evening_mood')),
         session.get('brain_dump', ''),
-        ', '.join(wins),
-        tasks[0]['text'] if len(tasks) > 0 else '',
-        tasks[1]['text'] if len(tasks) > 1 else '',
-        tasks[2]['text'] if len(tasks) > 2 else '',
+        ', '.join(str(w) for w in wins),
+        _safe_task_text(tasks, 0),
+        _safe_task_text(tasks, 1),
+        _safe_task_text(tasks, 2),
         session.get('intention', ''),
-        mm,
+        _safe_mood(session.get('morning_mood')),
         session.get('morning_note', ''),
-        'Yes' if len(tasks) > 0 and tasks[0].get('done') else ('No' if len(tasks) > 0 else ''),
-        'Yes' if len(tasks) > 1 and tasks[1].get('done') else ('No' if len(tasks) > 1 else ''),
-        'Yes' if len(tasks) > 2 and tasks[2].get('done') else ('No' if len(tasks) > 2 else ''),
+        _safe_task_done(tasks, 0),
+        _safe_task_done(tasks, 1),
+        _safe_task_done(tasks, 2),
     ]
 
 # ---------------------------------------------------------------------------
@@ -167,7 +185,12 @@ def build_excel_row(date_str: str, session: dict):
 # ---------------------------------------------------------------------------
 @app.route('/health')
 def health():
-    return jsonify({'status': 'ok'})
+    return jsonify({'status': 'ok', 'service': 'BrainDumpApp', 'version': APP_VERSION})
+
+
+@app.route('/api/health')
+def api_health():
+    return health()
 
 
 @app.route('/version')
@@ -255,7 +278,7 @@ def export_excel(date_str):
     return send_file(
         buf,
         as_attachment=True,
-        download_name='brain_dump_log.xlsx',
+        download_name=f'brain_dump_log_{date_str}.xlsx',
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     )
 
@@ -267,16 +290,14 @@ def export_markdown(date_str):
     if not session:
         abort(404)
 
-    em_idx = session.get('evening_mood')
-    mm_idx = session.get('morning_mood')
-    em = MOOD_EMOJIS[int(em_idx) - 1] if em_idx else '—'
-    mm = MOOD_EMOJIS[int(mm_idx) - 1] if mm_idx else None
+    em = _safe_mood(session.get('evening_mood')) or '—'
+    mm = _safe_mood(session.get('morning_mood')) or None
 
-    wins  = session.get('wins', [])
-    tasks = session.get('tasks', [])
+    wins = session.get('wins', []) if isinstance(session.get('wins', []), list) else []
+    tasks = session.get('tasks', []) if isinstance(session.get('tasks', []), list) else []
 
-    wins_md  = '\n'.join(f'- {w}' for w in wins)  if wins  else '- —'
-    tasks_md = '\n'.join(f'- [ ] {t["text"]}' for t in tasks) if tasks else '- —'
+    wins_md = '\n'.join(f'- {w}' for w in wins) if wins else '- —'
+    tasks_md = '\n'.join(f'- [ ] {t.get("text", "")}' for t in tasks if isinstance(t, dict)) if tasks else '- —'
 
     md = (
         f'# Brain Dump — {date_str}\n\n'
@@ -290,8 +311,8 @@ def export_markdown(date_str):
     if mm:
         morning_date = session.get('morning_date', date_str)
         task_status_md = '\n'.join(
-            f'- [x] {t["text"]}' if t.get('done') else f'- [ ] {t["text"]}'
-            for t in tasks
+            f'- [x] {t.get("text", "")}' if t.get('done') else f'- [ ] {t.get("text", "")}'
+            for t in tasks if isinstance(t, dict)
         ) if tasks else '- —'
         export_ts = now_berlin().strftime('%Y-%m-%d %H:%M')
         md += (

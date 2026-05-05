@@ -90,7 +90,7 @@ const TRANS = {
     landingEveningDesc: '5 Schritte durch den Tagesabschluss: Stimmung, Gedanken, Erfolge, Aufgaben und eine Intention für morgen.',
     landingMorningTitle: 'Morgen-Checkin',
     landingMorningDesc: 'Gestrige Intention prüfen, Aufgaben abhaken und mit einem klaren Fokus in den Tag starten.',
-    landingDataNote: 'Es wird nichts dauerhaft gespeichert. Daten liegen nur fluechtig im laufenden Container und starten nach jedem Neustart leer.',
+    landingDataNote: 'Deine Einträge bleiben lokal in der Container-Datenablage. Für produktive Nutzung sollte /data als Volume gemountet werden.',
     landingGithub: 'GitHub ↗',
     landingCta: 'App öffnen →',
 
@@ -187,7 +187,7 @@ const TRANS = {
     landingEveningDesc: '5 guided steps to close out the day: mood, thoughts, wins, tasks, and an intention for tomorrow.',
     landingMorningTitle: 'Morning Check-in',
     landingMorningDesc: 'Review yesterday\'s intention, check off tasks, and start the day with a clear focus.',
-    landingDataNote: 'Nothing is stored permanently. Data exists only in volatile runtime storage and starts empty after each restart.',
+    landingDataNote: 'Your entries stay local in the container data store. For production use, mount /data as a volume.',
     landingGithub: 'GitHub ↗',
     landingCta: 'Open App →',
 
@@ -363,7 +363,7 @@ async function apiExportExcel(dateStr) {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      URL.revokeObjectURL(url);
+      window.setTimeout(() => URL.revokeObjectURL(url), 1500);
       return true;
     }
   } catch (e) {

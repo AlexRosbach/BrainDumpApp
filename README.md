@@ -1,71 +1,148 @@
-# BrainDumpApp: Daily Reflection Routine
+# BrainDumpApp
 
-Current version: **v1.3.0**
+![Version](https://img.shields.io/badge/version-1.4.0-6366f1)
+![Docker](https://img.shields.io/badge/docker-alexrosbach%2Fbraindumpapp-2496ed)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-BrainDumpApp is a self-hosted web application designed to support a structured daily reflection habit. The tool guides users through an evening check-out routine and a morning check-in routine, capturing mood, thoughts, wins, priorities, and intentions in a calm, distraction-free interface.
+BrainDumpApp is a small self-hosted daily reflection app for an evening check-out and morning check-in routine. It helps you clear your head, capture wins, plan the next day, and export the result as Excel or Markdown.
 
-## Core Capabilities
+## Features
 
-The application provides two complementary routines that together form a complete daily reflection cycle. The **Evening Check-out** is a five-step guided flow covering mood rating, free-text brain dump, wins of the day, top-three tasks for tomorrow, and a personal intention for the next day. The **Morning Check-in** loads the previous evening's session and presents yesterday's intention prominently, offers an interactive task checklist to track carry-over items, and collects a mood rating and a focus note for the day ahead.
+- Guided evening flow: mood, brain dump, wins, top 3 tasks, next-day intention
+- Morning check-in: review yesterday's intention, mark tasks done, add mood/focus note
+- Excel export/import for portable daily logs
+- Markdown export for notes apps such as Joplin
+- German/English UI
+- Dark/light mode
+- Local container storage under `/data`
+- Docker-first deployment
 
-On first visit, users land on a short introduction page that explains the app's purpose and links directly to the GitHub repository: https://github.com/AlexRosbach/BrainDumpApp
+## Screens and UX
 
-All session data is stored as JSON files inside the running container (`/data`) without persistent volumes. Each day's data lives in a single file (`YYYY-MM-DD.json`), and morning check-in data is merged back into the previous day's file to keep records self-contained during runtime.
+The UI uses a compact LanLens-inspired design system: dark default theme, light mode, amber evening accent, emerald morning accent, sticky header, mobile-first layout, and footer attribution with a GitHub project link.
 
-If no session data is available for yesterday (for example after redeploying with a fresh image), the morning flow offers an **Excel upload button** to import the latest exported data and prefill the check-in.
+## Docker Images
 
-## Technical Foundation
-
-The deployment combines Flask as the backend, plain HTML/CSS/JavaScript for the single-page frontend, and openpyxl for Excel export. The interface uses the Inter typeface and a design language modelled after LanLens. The entire application runs in a single Docker container based on Python 3.11-slim, served by gunicorn and designed to sit behind a reverse proxy for TLS termination. Runtime data is held in `/data` on ephemeral container storage and is reset after restart.
-
-## App Modes
-
-On each browser load, the app starts on the landing page. After clicking "App öffnen / Open App", it auto-detects the appropriate mode based on local browser time:
-
-| Time window | Behaviour |
-|---|---|
-| Before 11:00 | Morning Check-in opens automatically |
-| After 16:00  | Evening Check-out opens automatically |
-| 11:00 – 16:00 | Both modes are offered via a selector screen |
-
-**Evening Check-out** uses warm amber tones. **Morning Check-in** uses emerald tones. Both modes are also available manually at any time via the mode selector.
-
-## Getting Started
-
-Requires Docker 20.10+ with Compose support.
-
-**1. Clone the repository**
-```bash
-git clone https://github.com/AlexRosbach/BrainDumpApp.git
-cd BrainDumpApp
-```
-
-**2. Start the container**
-```bash
-docker-compose up -d
-```
-
-**3. Open the app**
-
-Navigate to `http://localhost:5000` in your browser or on your iPad.
-
-The app uses ephemeral runtime storage at `/data`. No data is persisted across container restarts.
-
-**Local development (without Docker)**
+Images are published on Docker Hub:
 
 ```bash
-cp .env.example .env          # sets DATA_ROOT=./data
-pip install flask openpyxl pytz gunicorn
-cd app && DATA_ROOT=../data python app.py
+docker pull alexrosbach/braindumpapp:1.4.0
+# or
+docker pull alexrosbach/braindumpapp:latest
 ```
 
-A `.env.example` is included at the repository root with `DATA_ROOT=./data`.
+## Quick Start
+
+```bash
+docker run -d \
+  --name braindumpapp \
+  -p 5000:5000 \
+  -v braindump-data:/data \
+  --restart unless-stopped \
+  alexrosbach/braindumpapp:1.4.0
+```
+
+Open:
+
+```text
+http://localhost:5000
+```
+
+## Docker Compose
+
+```yaml
+services:
+  braindump:
+    image: alexrosbach/braindumpapp:1.4.0
+    ports:
+      - "5000:5000"
+    volumes:
+      - braindump-data:/data
+    environment:
+      - TZ=Europe/Berlin
+    restart: unless-stopped
+
+volumes:
+  braindump-data:
+```
+
+The included `docker-compose.yml` follows this structure.
+
+## Data and Export
+
+BrainDumpApp stores runtime data locally in `/data`:
+
+```text
+/data/sessions/YYYY-MM-DD.json
+/data/brain_dump_log.xlsx
+```
+
+Mount `/data` as a Docker volume if the data should survive container recreation.
+
+### Excel Export
+
+The Excel export creates or updates `/data/brain_dump_log.xlsx` and downloads a copy named:
+
+```text
+brain_dump_log_YYYY-MM-DD.xlsx
+```
+
+If a row for the date already exists, it is updated instead of duplicated.
+
+### Markdown Export
+
+Markdown export returns a note-style daily summary with evening and morning sections and can be copied directly from the UI.
+
+## API
+
+```http
+GET /api/health
+```
+
+```json
+{"status":"ok","service":"BrainDumpApp","version":"1.4.0"}
+```
+
+```http
+GET /version
+```
+
+```json
+{"version":"1.4.0"}
+```
+
+Main endpoints:
+
+- `GET /api/session/{YYYY-MM-DD}`
+- `POST /api/session/{YYYY-MM-DD}`
+- `POST /api/export/excel/{YYYY-MM-DD}`
+- `GET /api/export/markdown/{YYYY-MM-DD}`
+- `POST /api/import/excel`
+
+## Local Development
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r app/requirements.txt
+DATA_ROOT=./data python app/app.py
+```
+
+Open `http://localhost:5000`.
+
+## Security Notes
+
+- Container runs the app process as non-root after startup ownership checks
+- `/data` is created and owned by the app user on container start
+- Request size is limited to 2 MB for Excel uploads
+- Session writes only persist known whitelisted fields
+- Date parameters are validated before file access
+- Error responses avoid stack traces
+- Security headers are set for every response
 
 ## Reverse Proxy
 
-The application is designed to run behind a reverse proxy (e.g. NGINX) that handles TLS termination. Flask processes `X-Forwarded-For` and `X-Forwarded-Proto` headers via Werkzeug's `ProxyFix` middleware.
-
-If you see **504 Gateway Timeout**, the most common causes are upstream timeout values that are too low or a wrong upstream target. Use this baseline NGINX setup:
+Example NGINX location:
 
 ```nginx
 location / {
@@ -75,145 +152,21 @@ location / {
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
-
-    # Keep these at or above Gunicorn timeout values
     proxy_connect_timeout 10s;
     proxy_send_timeout 90s;
     proxy_read_timeout 90s;
-
-    # Match upload size for Excel import
     client_max_body_size 2m;
 }
 ```
 
-Quick checks:
-- `curl http://127.0.0.1:5000/health`
-- `curl http://127.0.0.1:5000/version`
+## Versioning
 
-## Security Hardening
-
-The following measures are active by default:
-
-| Layer | Measure |
-|---|---|
-| Docker image | Non-root user (`braindump`, uid 1001) |
-| Docker image | Application files read-only (`chmod 550`/`444`) |
-| Docker image | `.pyc` files and pip cache removed from image |
-| gunicorn | `--max-requests 500` — workers recycled to prevent memory leaks |
-| gunicorn | `--timeout 90 / --graceful-timeout 30` — avoids 504s on slow upstream connections |
-| gunicorn | `--keep-alive 65` — keeps upstream connections stable behind reverse proxies |
-| gunicorn | `--forwarded-allow-ips 127.0.0.1` — only trust proxy headers from localhost |
-| Flask | `ProxyFix` middleware for correct client IP logging behind NGINX |
-| Flask | `MAX_CONTENT_LENGTH = 2 MB` — allows `.xlsx` upload while still rejecting oversized request bodies |
-| Flask | Session writes use an allowed-key whitelist — arbitrary client JSON fields are rejected |
-| Flask | Date parameter validated against `YYYY-MM-DD` regex before file access |
-| Flask | No stack traces in error responses |
-| HTTP headers | `X-Content-Type-Options: nosniff` |
-| HTTP headers | `X-Frame-Options: DENY` |
-| HTTP headers | `Content-Security-Policy` (script/style/font sources locked down) |
-| HTTP headers | `Referrer-Policy: strict-origin-when-cross-origin` |
-| HTTP headers | `Permissions-Policy` — geolocation, microphone, camera denied |
-| HTTP headers | `Server` header removed |
-
-**Note on Content-Security-Policy:** The frontend uses inline `onclick` handlers inside JavaScript-generated HTML, which requires `script-src 'unsafe-inline'`. All user input rendered back into the page is escaped via `escHtml()` before insertion, so no user-controlled string can inject executable code.
-
-## Data & Export
-
-Session files are written to `/data/sessions/YYYY-MM-DD.json` inside the running container and are not persisted after restart.
-
-```json
-{
-  "evening_mood": 4,
-  "brain_dump": "...",
-  "wins": ["...", "..."],
-  "tasks": [{ "text": "...", "done": false }],
-  "intention": "...",
-  "morning_mood": 3,
-  "morning_note": "...",
-  "morning_date": "YYYY-MM-DD"
-}
-```
-
-**Excel Export** — generates or updates `brain_dump_log.xlsx` in `/data` during runtime. Each row represents one day. If a row for that date already exists it is updated in place rather than duplicated.
-
-**Markdown Export** — generates a Joplin-compatible Markdown note combining evening and morning data into a single document, with one-click clipboard copy.
-
-## Internationalization
-
-The interface is available in German (default) and English. The language toggle is always visible in the header. The preference persists in `localStorage`.
-
-## Dark Mode
-
-A `☀️ / 🌙` toggle in the header switches between a deep dark theme (default, `#0f1117` background) and a light theme. The preference persists in `localStorage`.
-
-## Health & Version Endpoints
-
-```
-GET /health
-→ {"status": "ok"}
-```
-
-```
-GET /version
-→ {"version": "1.2.0"}
-```
-
-The Docker health check polls `/health` every 30 seconds.
-
-## Versioning & Releases
-
-The project now uses a dedicated `VERSION` file at repository root. The app reads this value and displays it in the UI header and on the landing page.
-
-Suggested release flow:
-
-```bash
-# update VERSION first, then:
-git add VERSION README.md app/ Dockerfile
-
-git commit -m "release: v1.2.0"
-
-git tag -a v1.2.0 -m "BrainDumpApp v1.2.0"
-
-git push origin main --tags
-```
-
-Create the GitHub release from tag `v1.3.0` and paste the changelog highlights.
+The app version is stored in `VERSION`, exposed through `/version`, and shown in the UI header.
 
 ## Changelog
 
-### v1.3.0 (2026-05-04)
-- **Security**: `write_session` now only persists whitelisted fields — arbitrary client JSON keys are dropped
-- **Reliability**: `export_excel` serves the download from an in-memory buffer, eliminating a race condition on the on-disk log file
-- **Frontend**: `apiSaveSession` checks `res.ok` before parsing — HTTP errors are no longer swallowed
-- **Frontend**: `finishEvening` and `saveMorningCheckin` show an error toast on save failure instead of silently advancing
-- **Frontend**: `enterApp()` is now `async` with `await handleStartMorning()`, fixing a race between session check and screen render
-- **Docker**: `start_period` in `docker-compose.yml` aligned to 15 s to match the Dockerfile `HEALTHCHECK`
-- **Docs**: Security hardening table updated; Changelog section added; local-dev instructions corrected
+See [CHANGELOG.md](CHANGELOG.md).
 
-### v1.2.0 (2026-05-04)
-- Central `VERSION` file, `/version` API endpoint, version shown in header and landing page
-- Gunicorn timeout raised to 90 s + `--graceful-timeout` + `--keep-alive` to address 504 Gateway Timeout issues
-- NGINX reverse-proxy reference configuration documented
-- Excel upload fallback on Morning Check-in when no prior session exists
-- Landing page with app description, feature cards, data note and GitHub link
-- Button-group spacing increased throughout the UI
+## License
 
-### v1.0.0
-- Initial release: Evening Check-out and Morning Check-in flows, Excel/Markdown export, dark/light theme, DE/EN i18n
-
-## Docker Reference
-
-```yaml
-services:
-  braindump:
-    build: .
-    ports:
-      - "5000:5000"
-    tmpfs:
-      - /data
-    environment:
-      - TZ=Europe/Berlin
-    restart: unless-stopped
-```
-
-Change `TZ` to match your timezone if deploying outside Central Europe.
+MIT — see [LICENSE](LICENSE).

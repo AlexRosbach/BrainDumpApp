@@ -12,7 +12,10 @@ WORKDIR /app
 # Dependencies — install before copying source so Docker layer is cached
 # ---------------------------------------------------------------------------
 COPY app/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gosu \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir -r requirements.txt \
     && pip cache purge \
     && find /usr -name '*.pyc' -delete \
     && find /usr -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
@@ -22,12 +25,14 @@ RUN pip install --no-cache-dir -r requirements.txt \
 # ---------------------------------------------------------------------------
 COPY app/ .
 COPY VERSION /app/VERSION
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 # Pre-create /data so the named volume inherits correct ownership on first run.
 # Docker copies this directory into a new empty named volume automatically.
 RUN mkdir -p /data/sessions \
     && chown -R braindump:braindump /data \
     && chown -R braindump:braindump /app \
+    && chmod 755 /usr/local/bin/docker-entrypoint.sh \
     && chmod -R 550 /app \
     && chmod 444 /app/templates/index.html \
     && find /app/static -type f -exec chmod 444 {} +
@@ -40,8 +45,6 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 # Prevent gunicorn/Flask from leaking the Python version in headers
 ENV PYTHONPATH=/app
-
-USER braindump
 
 EXPOSE 5000
 
@@ -63,6 +66,8 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
 #   --max-requests-jitter: stagger recycling so not all workers restart at once
 #   --forwarded-allow-ips: trust X-Forwarded-* only from localhost (NGINX)
 # ---------------------------------------------------------------------------
+ENTRYPOINT ["docker-entrypoint.sh"]
+
 CMD ["gunicorn", \
      "--bind",                   "0.0.0.0:5000", \
      "--workers",                "2", \
