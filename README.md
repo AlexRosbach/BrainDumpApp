@@ -2,6 +2,7 @@
 
 ![Version](https://img.shields.io/badge/version-1.4.0-6366f1)
 ![Docker](https://img.shields.io/badge/docker-alexrosbach%2Fbraindumpapp-2496ed)
+![Docker Pulls](https://img.shields.io/docker/pulls/alexrosbach/braindumpapp)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 BrainDumpApp is a small self-hosted daily reflection app for an evening check-out and morning check-in routine. It helps you clear your head, capture wins, plan the next day, and export the result as Excel or Markdown.
@@ -20,6 +21,20 @@ BrainDumpApp is a small self-hosted daily reflection app for an evening check-ou
 ## Screens and UX
 
 The UI uses a compact LanLens-inspired design system: dark default theme, light mode, amber evening accent, emerald morning accent, sticky header, mobile-first layout, and footer attribution with a GitHub project link.
+
+### Landing page
+
+![BrainDumpApp landing page](docs/screenshots/landing.png)
+
+### Evening check-out
+
+![Evening mood step](docs/screenshots/evening-mood.png)
+
+![Brain dump step](docs/screenshots/brain-dump.png)
+
+### Morning check-in
+
+![Morning check-in](docs/screenshots/morning-checkin.png)
 
 ## Docker Images
 

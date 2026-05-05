@@ -877,7 +877,7 @@ function renderMorningFlow() {
     <button class="btn-primary btn-save-morning" onclick="saveMorningCheckin()">
       ${escHtml(t('btnSaveMorning'))}
     </button>
-    <button class="btn-back-top" onclick="goBack()">← ${escHtml(t('btnBack'))}</button>
+    <button class="btn-back-top" onclick="goBack()">${escHtml(t('btnBack'))}</button>
   </div>`);
 }
 
